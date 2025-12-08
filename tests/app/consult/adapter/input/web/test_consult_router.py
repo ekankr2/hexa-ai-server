@@ -59,7 +59,7 @@ def test_app():
     # 의존성 오버라이드
     app.dependency_overrides[get_analysis_use_case] = lambda: use_case
 
-    app.include_router(consult_router, prefix="/consult")
+    app.include_router(consult_router, prefix="/convert")
 
     return app, repository
 
@@ -80,8 +80,8 @@ def test_get_analysis_returns_200_for_completed_session(test_app):
     session.add_message(Message(role="assistant", content="답변3"))
     repository.save(session)
 
-    # When: GET /consult/{session_id}/analysis 호출
-    response = client.get(f"/consult/{session.session_id}/analysis")
+    # When: GET /convert/{session_id}/analysis 호출
+    response = client.get(f"/convert/{session.session_id}/analysis")
 
     # Then: 200 OK와 분석 결과 반환
     assert response.status_code == 200
@@ -98,7 +98,7 @@ def test_get_analysis_returns_404_for_non_existent_session(test_app):
     client = TestClient(app)
 
     # When: 존재하지 않는 session_id로 호출
-    response = client.get("/consult/non-existent-id/analysis")
+    response = client.get("/convert/non-existent-id/analysis")
 
     # Then: 404 Not Found
     assert response.status_code == 404
@@ -118,8 +118,8 @@ def test_get_analysis_returns_400_for_incomplete_session(test_app):
     session.add_message(Message(role="user", content="질문2"))
     repository.save(session)
 
-    # When: GET /consult/{session_id}/analysis 호출
-    response = client.get(f"/consult/{session.session_id}/analysis")
+    # When: GET /convert/{session_id}/analysis 호출
+    response = client.get(f"/convert/{session.session_id}/analysis")
 
     # Then: 400 Bad Request
     assert response.status_code == 400
