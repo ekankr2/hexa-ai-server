@@ -1,6 +1,8 @@
+from typing import Iterator
 from openai import OpenAI
 
 from app.consult.application.port.ai_counselor_port import AICounselorPort
+from app.consult.domain.consult_session import ConsultSession
 from app.shared.vo.mbti import MBTI
 from app.shared.vo.gender import Gender
 
@@ -93,3 +95,56 @@ MBTI 특성 고려사항:
 5. 반말 사용 (친근하고 편안한 분위기)
 
 인사말을 생성해주세요:"""
+
+    def generate_response(self, session: ConsultSession, user_message: str) -> str:
+        """
+        사용자 메시지에 대한 AI 응답을 생성한다.
+        """
+        messages = self._build_messages(session)
+        messages.append({"role": "user", "content": user_message})
+
+        response = self._client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.7,
+            max_tokens=500
+        )
+
+        return response.choices[0].message.content.strip()
+
+    def generate_response_stream(self, session: ConsultSession, user_message: str) -> Iterator[str]:
+        """
+        사용자 메시지에 대한 AI 응답을 스트리밍 방식으로 생성한다.
+        """
+        messages = self._build_messages(session)
+        messages.append({"role": "user", "content": user_message})
+
+        stream = self._client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.7,
+            max_tokens=500,
+            stream=True
+        )
+
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                yield chunk.choices[0].delta.content
+
+    def _build_messages(self, session: ConsultSession) -> list[dict]:
+        """대화 히스토리를 기반으로 OpenAI 메시지 형식을 생성한다"""
+        messages = [
+            {
+                "role": "system",
+                "content": "당신은 10년 경력의 MBTI 전문 상담사입니다. 따뜻하고 공감적이며, 각 MBTI 유형의 특성을 깊이 이해하고 있습니다."
+            }
+        ]
+
+        # 대화 히스토리 추가
+        for msg in session.get_messages():
+            messages.append({
+                "role": msg.role,
+                "content": msg.content
+            })
+
+        return messages

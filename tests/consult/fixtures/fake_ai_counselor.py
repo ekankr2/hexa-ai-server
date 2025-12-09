@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from app.consult.application.port.ai_counselor_port import AICounselorPort
 from app.consult.domain.consult_session import ConsultSession
 from app.shared.vo.mbti import MBTI
@@ -16,6 +18,11 @@ class FakeAICounselor(AICounselorPort):
 
     def generate_response(self, session: ConsultSession, user_message: str) -> str:
         return self._response
+
+    def generate_response_stream(self, session: ConsultSession, user_message: str) -> Iterator[str]:
+        """스트리밍 응답을 생성한다 (테스트용: 한 글자씩)"""
+        for char in self._response:
+            yield char
 
     def set_response(self, response: str) -> None:
         """테스트용: 응답 설정"""

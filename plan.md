@@ -171,7 +171,7 @@ client_id = settings.GOOGLE_CLIENT_ID
   - **API**: `POST /consult/{session_id}/message` (Header: Authorization) → 일반 JSON 응답
   - **✅ 인수 조건**: 메시지 저장, user_id 검증 (세션 소유자만 접근), AI 응답 생성, 대화 히스토리 조회 가능
 
-- [ ] `HAIS-14` [Consult] SSE 스트리밍 추가
+- [x] `HAIS-14` [Consult] SSE 스트리밍 추가
   - **📖 유저 스토리**: "사용자로서, AI 응답이 한 글자씩 실시간으로 나타나길 원한다"
   - **Adapter 확장**: OpenAI 스트리밍 모드
   - **API 확장**: SSE (Server-Sent Events) 응답 형식

@@ -330,3 +330,43 @@ def test_send_message_to_completed_session_returns_400(client, user_repo, sessio
     # Then: 400 Bad Request를 반환한다
     assert response.status_code == 400
     assert "상담이 완료되었습니다" in response.json()["detail"]
+
+
+def test_send_message_stream_returns_sse_events(client, user_repo, session_repo, consult_repo):
+    """메시지 전송 시 SSE 스트리밍으로 AI 응답을 받을 수 있다"""
+    # Given: 로그인한 사용자
+    user = User(
+        id="user-123",
+        email="test@example.com",
+        mbti=MBTI("INTJ"),
+        gender=Gender("MALE")
+    )
+    user_repo.save(user)
+
+    # Given: 유효한 인증 세션
+    auth_session = Session(session_id="valid-session-123", user_id="user-123")
+    session_repo.save(auth_session)
+
+    # Given: 상담 세션
+    consult_session = ConsultSession(
+        id="consult-session-123",
+        user_id="user-123",
+        mbti=MBTI("INTJ"),
+        gender=Gender("MALE")
+    )
+    consult_repo.save(consult_session)
+
+    # When: 스트리밍 API를 호출하면
+    response = client.post(
+        "/consult/consult-session-123/message/stream",
+        headers={"Authorization": "Bearer valid-session-123"},
+        json={"content": "안녕하세요"}
+    )
+
+    # Then: SSE 응답을 반환한다
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/event-stream; charset=utf-8"
+
+    # SSE 형식 검증
+    content = response.text
+    assert "data:" in content
