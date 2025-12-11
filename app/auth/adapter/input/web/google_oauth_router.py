@@ -12,6 +12,9 @@ from app.auth.domain.session import Session
 from app.user.infrastructure.model.user_model import UserModel
 from config.database import get_db
 from config.settings import get_settings
+from config.database import get_db_session
+from app.user.infrastructure.repository.mysql_user_repository import MySQLUserRepository
+from app.user.domain.user import User
 
 google_oauth_router = APIRouter()
 
@@ -54,7 +57,7 @@ async def google_callback(code: str, state: str | None = None, db: DbSession = D
         db.add(user)
         db.commit()
 
-    # Session 생성 및 저장
+    # Session 생성
     session_id = str(uuid.uuid4())
     session_repo = MySqlSessionRepository(db)
     session_repo.save(Session(session_id=session_id, user_id=google_id))
