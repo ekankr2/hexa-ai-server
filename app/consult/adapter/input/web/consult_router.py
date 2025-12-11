@@ -32,6 +32,7 @@ def start_consult(user_id: str = Depends(get_current_user_id)):
     3. StartConsultUseCase 실행
     4. 세션 ID 반환
     """
+    print("hello")
     # User 조회
     if not _user_repository:
         raise HTTPException(

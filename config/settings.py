@@ -1,12 +1,22 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 
 
 class Settings(BaseSettings):
     """애플리케이션 전체 설정"""
 
+    model_config = ConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore"  # .env의 extra 필드 무시
+    )
+
     # MySQL URL (필수)
     MYSQL_URL: str
+
+    # Redis URL (필수)
+    REDIS_URL: str
 
     # OpenAI Settings (필수)
     OPENAI_API_KEY: str
@@ -38,10 +48,6 @@ class Settings(BaseSettings):
     def google_redirect_uri(self) -> str:
         """Google OAuth 콜백 URI (BASE_URL에서 자동 생성)"""
         return f"{self.BASE_URL}/auth/google/callback"
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
     @property
     def database_url(self) -> str:
