@@ -64,15 +64,14 @@ async def google_callback(code: str, state: str | None = None, db: DbSession = D
 
     # 프론트엔드로 리다이렉트 + 쿠키 설정
     settings = get_settings()
-    frontend_url = "http://localhost:3000"  # TODO: settings에서 가져오기
 
-    response = RedirectResponse(frontend_url)
+    response = RedirectResponse(settings.FRONTEND_URL)
     response.set_cookie(
         key="session_id",
         value=session_id,
         httponly=True,
-        secure=False,  # 개발환경에서는 False
-        samesite="lax",
+        secure=settings.is_production,
+        samesite="none" if settings.is_production else "lax",
         max_age=6 * 60 * 60,
     )
 

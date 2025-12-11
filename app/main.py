@@ -34,6 +34,7 @@ app = FastAPI(
 origins = [
     "http://localhost:3000",  # Next.js 프론트 엔드 URL
     "https://hexa-frontend.vercel.app",  # Vercel 배포 URL
+    "https://hexa-frontend-chi.vercel.app",  # Vercel 배포 URL (chi)
 ]
 
 app.add_middleware(

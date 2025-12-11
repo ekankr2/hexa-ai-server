@@ -11,8 +11,24 @@ class Settings(BaseSettings):
     # OpenAI Settings (필수)
     OPENAI_API_KEY: str
 
-    # Server Settings
-    BASE_URL: str = "http://localhost:8000"  # production에서는 도메인으로
+    # Environment
+    ENV: str = "development"  # "development" or "production"
+
+    @property
+    def is_production(self) -> bool:
+        return self.ENV == "production"
+
+    @property
+    def BASE_URL(self) -> str:
+        if self.is_production:
+            return "https://hexa-ai-server-production.up.railway.app"
+        return "http://localhost:8000"
+
+    @property
+    def FRONTEND_URL(self) -> str:
+        if self.is_production:
+            return "https://hexa-frontend-chi.vercel.app"
+        return "http://localhost:3000"
 
     # Google OAuth Settings
     GOOGLE_CLIENT_ID: str
