@@ -2,3 +2,9 @@
 /.code/
 /.env
 /.venv/
+docker-compose.yml
+__pycache__/
+app/__pycache__/
+tests/__pycache__/
+*.pyc
+.pytest_cache/

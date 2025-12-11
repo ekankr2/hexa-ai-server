@@ -2,7 +2,7 @@ import json
 import uuid
 
 from fastapi import APIRouter, Cookie, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 
 from app.auth.infrastructure.oauth.google_oauth_service import GoogleOAuthService
 from app.auth.infrastructure.repository.redis_session_repository import (
@@ -101,13 +101,11 @@ async def auth_status(request: Request, session_id: str | None = Cookie(None)):
     }
 
 
-@google_oauth_router.post("/logout")
 async def logout(session_id: str | None = Cookie(None)):
     """로그아웃 - 세션 삭제"""
     if session_id:
         redis_client.delete(f"session:{session_id}")
 
-    response = RedirectResponse("http://localhost:3000", status_code=302)
+    response = JSONResponse(status_code=204, content=None)  # pyright: ignore[reportUndefinedVariable]
     response.delete_cookie("session_id")
-
     return response
