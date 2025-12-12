@@ -42,15 +42,22 @@ class OpenAIMessageConverter(MessageConverterPort):
             messages=[
                 {
                     "role": "system",
-                    "content": "당신은 MBTI 기반 커뮤니케이션 전문가입니다. 메시지를 지정된 톤으로 변환하고 JSON 형식으로 응답하세요.",
+                    "content": "당신은 MBTI 기반 커뮤니케이션 전문가입니다. 메시지를 지정된 톤으로 변환하고 JSON 형식으로만 응답하세요.",
                 },
                 {"role": "user", "content": prompt},
             ],
             temperature=0.7,
+            response_format={"type": "json_object"},
         )
 
         # JSON 응답 파싱
-        content = response.choices[0].message.content
+        content = response.choices[0].message.content.strip()
+        # markdown 코드 블록 제거
+        if content.startswith("```"):
+            content = content.split("```")[1]
+            if content.startswith("json"):
+                content = content[4:]
+            content = content.strip()
         result = json.loads(content)
 
         return ToneMessage(
@@ -77,26 +84,31 @@ class OpenAIMessageConverter(MessageConverterPort):
         # 톤별 가이드라인 정의
         tone_guidelines = self._get_tone_guidelines(tone)
 
-        return f"""다음 메시지를 '{tone}' 톤으로 변환해주세요.
+        return f"""'{receiver_mbti.value}' 유형한테 보내는 메시지를 '{tone}' 스타일로 변환해.
 
-발신자 MBTI: {sender_mbti.value}
 수신자 MBTI: {receiver_mbti.value}
-
-수신자의 MBTI 특성:
 {receiver_characteristics}
 
-원본 메시지: {original_message}
+원본: {original_message}
 
-[{tone} 톤 변환 가이드라인]
+[{tone} 스타일]
 {tone_guidelines}
 
-위 가이드라인을 정확히 따라 메시지를 변환하고,
-수신자의 MBTI 특성과 선택한 톤을 고려하여 왜 이 표현이 {receiver_mbti.value} 유형에게 효과적인지 설명해주세요.
+★ 핵심: {receiver_mbti.value} 특성에 맞게 변환! ★
+- E: 활발하고 에너지있게 / I: 차분하고 조용하게
+- S: 구체적 사실 위주 / N: 가능성, 아이디어 위주
+- T: 논리적, 직접적으로 / F: 감정 공감하며 부드럽게
+- J: 명확하고 결론 먼저 / P: 유연하고 여유있게
 
-JSON 형식으로 응답:
+규칙:
+1. {receiver_mbti.value}가 좋아하는 방식으로 표현 (이게 제일 중요!)
+2. 원본 톤 유지 (반말→반말, 존댓말→존댓말)
+3. 카톡처럼 자연스럽게, AI티 금지
+
+JSON:
 {{
-    "content": "변환된 메시지",
-    "explanation": "왜 이 표현이 효과적인지 설명 (2-3줄)"
+    "content": "{receiver_mbti.value}에게 맞춤 변환된 메시지",
+    "explanation": "{receiver_mbti.value}는 ~해서 이렇게 표현했어 (1문장, 반말)"
 }}"""
 
     def _get_tone_guidelines(self, tone: str) -> str:
@@ -110,25 +122,22 @@ JSON 형식으로 응답:
         """
         guidelines = {
             "공손한": """
-• 존댓말 사용 (요체, 합니다체)
-• 정중한 표현과 겸손한 어조 유지
-• "~해주실 수 있을까요?", "~드립니다", "감사합니다" 등의 표현 사용
-• 격식 있는 문장 구조
-• 예시: "안녕하세요. 다음 주 회의 일정을 조율하고자 연락드렸습니다. 가능하신 시간을 알려주시면 감사하겠습니다."
+• 원본 말투 유지! (반말→반말로 공손하게, 존댓말→존댓말로 공손하게)
+• 배려있고 부드러운 표현
+• 반말 예시: "혹시 이거 어려우면 도와줄까?", "시간 될 때 봐줄 수 있어?"
+• 존댓말 예시: "혹시 시간 되실 때 봐주실 수 있을까요?"
             """,
             "캐주얼한": """
-• 반말 또는 편한 말투 사용
-• 친근하고 부담 없는 어조
-• 이모지나 구어체 표현 활용 가능
-• 자연스럽고 편안한 문장 구조
-• 예시: "안녕! 다음 주 회의 시간 어때? 네가 편한 시간 알려줘~"
+• 친구한테 말하듯 편하게
+• 원본 말투 유지
+• 반말 예시: "야 이거 봐봐", "어 그래 알겠어"
+• 존댓말 예시: "아 네 알겠어요~", "그거 한번 봐주세요"
             """,
             "간결한": """
-• 핵심 내용만 짧고 명확하게 전달
-• 불필요한 수식어나 부연 설명 제거
-• 명사형 종결이나 짧은 문장 사용
-• 최소한의 단어로 의미 전달
-• 예시: "다음 주 회의 시간 조율 필요. 가능한 시간대 공유 부탁드림."
+• 핵심만 짧게, 군더더기 제거
+• 원본 말투 유지
+• 반말 예시: "이거 확인해줘", "알겠어"
+• 존댓말 예시: "확인 부탁드려요", "네 알겠습니다"
             """,
         }
 
